@@ -2,11 +2,11 @@ const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema(
   {
-    _id: String,
     name: {
       type: String,
       required: true,
     },
+    uid: String,
     email: {
       type: String,
       required: true,
@@ -22,7 +22,6 @@ const UserSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    _id: false,
   }
 );
 
