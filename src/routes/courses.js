@@ -5,6 +5,9 @@ const {
   getCourses,
   getAdminCourses,
   getSingleCourse,
+  addSection,
+  addLesson,
+  updateCourse,
 } = require('../controllers/Course');
 const { authorize } = require('../middleware/authorize');
 const { firebaseAuthCheck } = require('../middleware/firebaseAuth');
@@ -26,6 +29,17 @@ router.post(
 
 router.get('/all', getCourses);
 router.get('/admin', firebaseAuthCheck, authorize('admin'), getAdminCourses);
-router.get('/:slug', getSingleCourse);
+router
+  .route('/:slug')
+  .get(getSingleCourse)
+  .put(firebaseAuthCheck, authorize('admin'), updateCourse);
+
+router.put(
+  '/:slug/sections/add/:instructor',
+  firebaseAuthCheck,
+  authorize('admin'),
+  addSection
+);
+router.put('/:slug/:sectionId/lessons/add/:instructor', addLesson);
 
 module.exports = router;

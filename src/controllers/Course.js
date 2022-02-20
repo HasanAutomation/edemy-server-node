@@ -25,6 +25,33 @@ exports.createCourse = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.updateCourse = catchAsync(async (req, res, next) => {
+  const { slug } = req.params;
+
+  const { instructor } = req.body;
+
+  if (req.user._id != instructor._id)
+    return next(new AppError('You are not authorized to do that', 403));
+
+  if (!req.body.paid) {
+    req.body.price = 0;
+  }
+
+  const course = await Course.findOneAndUpdate(
+    { slug },
+    { $set: req.body },
+    { new: true }
+  );
+
+  res.status(200).json({
+    success: true,
+    data: {
+      course,
+    },
+    errors: [],
+  });
+});
+
 exports.getCourses = catchAsync(async (req, res, next) => {
   const courses = await Course.find().populate('instructor');
   res.status(200).json({
@@ -62,4 +89,78 @@ exports.getSingleCourse = catchAsync(async (req, res, next) => {
     },
     errors: [],
   });
+});
+exports.addSection = catchAsync(async (req, res, next) => {
+  const { instructor, slug } = req.params;
+  const { title } = req.body;
+  if (instructor != req.user._id)
+    return next(new AppError('You are not authorized', 403));
+
+  const updatedCourse = await Course.findOneAndUpdate(
+    { slug },
+    {
+      $push: { sections: { title } },
+    },
+    {
+      new: true,
+    }
+  ).populate('instructor');
+
+  if (!updatedCourse) return next(new AppError('Course doesnt exist', 404));
+
+  res.status(200).json({
+    success: true,
+    data: {
+      course: updatedCourse,
+    },
+    errors: [],
+  });
+});
+
+exports.addLesson = catchAsync(async (req, res, next) => {
+  const { instructor, sectionId, slug } = req.params;
+  const { title, content, video, free_preview } = req.body;
+  if (instructor != req.user._id)
+    return next(new AppError('You are not authorized', 403));
+
+  const course = await Course.findOne({ slug });
+  if (!course) return next(new AppError('Course doesnt exist', 404));
+
+  const section = course.sections.find(section => section._id == sectionId);
+
+  section.lessons.push({
+    title,
+    content,
+    free_preview,
+    slug: slugify(title, { lower: true }),
+    video,
+  });
+
+  await course.save();
+
+  res.status(200).json({
+    success: true,
+    data: {
+      course,
+    },
+    errors: [],
+  });
+
+  // const updatedCourse = await Course.findOneAndUpdate(
+  //   { 'sections._id': sectionId },
+  //   {
+  //     $push: {
+  //       'sections.lessons': {
+  //         title,
+  //         slug: slugify(title, { lowercase: true }),
+  //         free_preview,
+  //         content,
+  //         video,
+  //       },
+  //     },
+  //   },
+  //   {
+  //     new: true,
+  //   }
+  // );
 });

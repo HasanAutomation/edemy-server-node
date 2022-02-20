@@ -6,9 +6,14 @@ const LessonSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      unique: true,
     },
     content: {
       type: {},
+    },
+    slug: {
+      type: String,
+      lowercase: true,
     },
     video: {},
     free_preview: {
