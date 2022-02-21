@@ -8,12 +8,15 @@ const {
   addSection,
   addLesson,
   updateCourse,
+  publishUnpublishCourse,
+  getPublishedCourses,
 } = require('../controllers/Course');
 const { authorize } = require('../middleware/authorize');
 const { firebaseAuthCheck } = require('../middleware/firebaseAuth');
 const validateRequest = require('../middleware/requestHandler');
 const router = express.Router();
 
+router.get('/published-courses', getPublishedCourses);
 router.post(
   '/create',
   [
@@ -40,6 +43,17 @@ router.put(
   authorize('admin'),
   addSection
 );
-router.put('/:slug/:sectionId/lessons/add/:instructor', addLesson);
+router.put(
+  '/:slug/:sectionId/lessons/add/:instructor',
+  firebaseAuthCheck,
+  authorize('admin'),
+  addLesson
+);
+router.put(
+  '/:courseId/publish-unpublish',
+  firebaseAuthCheck,
+  authorize('admin'),
+  publishUnpublishCourse
+);
 
 module.exports = router;

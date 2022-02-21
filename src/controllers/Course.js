@@ -123,7 +123,7 @@ exports.addLesson = catchAsync(async (req, res, next) => {
   if (instructor != req.user._id)
     return next(new AppError('You are not authorized', 403));
 
-  const course = await Course.findOne({ slug });
+  const course = await Course.findOne({ slug }).populate('instructor');
   if (!course) return next(new AppError('Course doesnt exist', 404));
 
   const section = course.sections.find(section => section._id == sectionId);
@@ -145,22 +145,41 @@ exports.addLesson = catchAsync(async (req, res, next) => {
     },
     errors: [],
   });
+});
 
-  // const updatedCourse = await Course.findOneAndUpdate(
-  //   { 'sections._id': sectionId },
-  //   {
-  //     $push: {
-  //       'sections.lessons': {
-  //         title,
-  //         slug: slugify(title, { lowercase: true }),
-  //         free_preview,
-  //         content,
-  //         video,
-  //       },
-  //     },
-  //   },
-  //   {
-  //     new: true,
-  //   }
-  // );
+exports.publishUnpublishCourse = catchAsync(async (req, res, next) => {
+  const { courseId } = req.params;
+  const { published } = req.body;
+
+  const course = await Course.findById(courseId).populate('instructor');
+
+  if (course.instructor._id.toString() !== req.user._id.toString()) {
+    return next(new AppError('You are not authorized to do this', 403));
+  }
+
+  const updatedCourse = await Course.findByIdAndUpdate(
+    courseId,
+    { published },
+    { new: true }
+  );
+
+  res.status(200).json({
+    success: true,
+    data: {
+      course: updatedCourse,
+    },
+    errors: [],
+  });
+});
+
+exports.getPublishedCourses = catchAsync(async (req, res, next) => {
+  const courses = await Course.find({ published: true }).populate('instructor');
+
+  res.status(200).json({
+    success: true,
+    data: {
+      courses,
+    },
+    errors: [],
+  });
 });
