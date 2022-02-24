@@ -10,6 +10,8 @@ const {
   updateCourse,
   publishUnpublishCourse,
   getPublishedCourses,
+  checkEnrollmentServer,
+  freeEnrollment,
 } = require('../controllers/Course');
 const { authorize } = require('../middleware/authorize');
 const { firebaseAuthCheck } = require('../middleware/firebaseAuth');
@@ -55,5 +57,8 @@ router.put(
   authorize('admin'),
   publishUnpublishCourse
 );
+
+router.get('/check-enrollment/:slug', firebaseAuthCheck, checkEnrollmentServer);
+router.put('/free-enrollment/:courseId', firebaseAuthCheck, freeEnrollment);
 
 module.exports = router;

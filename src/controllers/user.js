@@ -29,3 +29,19 @@ exports.getCurrentUser = catchAsync(async (req, res, next) => {
     errors: [],
   });
 });
+
+exports.getUserCourses = catchAsync(async (req, res, next) => {
+  const user = await User.findOne({ uid: req.user.uid }).populate('courses');
+
+  for (let i = 0; i < user.courses.length; i++) {
+    let instructor = await User.findById(user.courses[i].instructor);
+    user.courses[i].instructor = instructor;
+  }
+
+  res.status(200).json({
+    success: true,
+    data: {
+      courses: user.courses,
+    },
+  });
+});

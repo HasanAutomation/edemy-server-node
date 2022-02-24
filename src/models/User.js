@@ -19,6 +19,12 @@ const UserSchema = new mongoose.Schema(
       default: 'subscriber',
       enum: ['admin', 'subscriber'],
     },
+    courses: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Course',
+      },
+    ],
   },
   {
     timestamps: true,

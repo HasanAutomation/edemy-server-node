@@ -2,6 +2,7 @@ const catchAsync = require('../middleware/catchAsync');
 const slugify = require('slugify');
 const Course = require('../models/Course');
 const AppError = require('../util/error');
+const User = require('../models/User');
 
 exports.createCourse = catchAsync(async (req, res, next) => {
   const { name } = req.body;
@@ -181,5 +182,50 @@ exports.getPublishedCourses = catchAsync(async (req, res, next) => {
       courses,
     },
     errors: [],
+  });
+});
+
+exports.checkEnrollmentServer = catchAsync(async (req, res, next) => {
+  const { slug } = req.params;
+
+  const user = await User.findOne({ uid: req.user.uid }).populate('courses');
+
+  const course = user.courses.find(course => course.slug === slug);
+
+  if (course) {
+    return res.status(200).json({
+      success: true,
+    });
+  } else {
+    res.status(200).json({
+      success: false,
+    });
+  }
+});
+
+exports.freeEnrollment = catchAsync(async (req, res, next) => {
+  const { courseId } = req.params;
+
+  const user = await User.findOne({ uid: req.user.uid }).populate('courses');
+  const existingCourse = await Course.findById(courseId);
+
+  if (existingCourse.paid)
+    return next(new AppError('This is a paid course', 400));
+
+  const course = user.courses.find(course => course === courseId);
+
+  if (course) {
+    return next(new AppError('You are already enrolled into the course', 400));
+  }
+
+  user.courses.push(courseId);
+
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    data: {
+      message: 'Congrats! Now You can watch the course',
+    },
   });
 });
