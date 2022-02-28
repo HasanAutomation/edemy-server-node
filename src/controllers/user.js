@@ -19,7 +19,7 @@ exports.createUser = catchAsync(async (req, res, next) => {
 });
 
 exports.getCurrentUser = catchAsync(async (req, res, next) => {
-  const user = await User.findOne({ uid: req.user.uid });
+  const user = await User.findOne({ uid: req.user.uid }).populate('courses');
   if (!user) return next(new AppError('No User found', 404));
   res.status(200).json({
     success: true,
