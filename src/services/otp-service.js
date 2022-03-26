@@ -15,6 +15,7 @@ class OtpService {
       `<h3>Hello,${email}</h3>
         ${message}
         <p>${otp}</p>
+        <p>The OTP will be valid only for 5 minutes</p>
       `
     );
   }
