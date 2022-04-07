@@ -188,8 +188,7 @@ exports.getPublishedCourses = catchAsync(async (req, res, next) => {
 exports.checkEnrollmentServer = catchAsync(async (req, res, next) => {
   const { slug } = req.params;
 
-  const user = await User.findOne({ uid: req.user.uid }).populate('courses');
-
+  const user = await User.findById(req.user._id).populate('courses');
   const course = user.courses.find(course => course.slug === slug);
 
   if (course) {
@@ -206,7 +205,7 @@ exports.checkEnrollmentServer = catchAsync(async (req, res, next) => {
 exports.freeEnrollment = catchAsync(async (req, res, next) => {
   const { courseId } = req.params;
 
-  const user = await User.findOne({ uid: req.user.uid }).populate('courses');
+  const user = await User.findById(req.user._id).populate('courses');
   const existingCourse = await Course.findById(courseId);
 
   if (existingCourse.paid)

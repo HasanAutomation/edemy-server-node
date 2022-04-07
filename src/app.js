@@ -1,4 +1,5 @@
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const { readdirSync } = require('fs');
 const connectDB = require('./util/db');
@@ -7,7 +8,15 @@ const AppError = require('./util/error');
 
 const app = express();
 
-app.use(cors());
+app.use(cookieParser());
+
+app.use(
+  cors({
+    credentials: true,
+    origin: ['http://localhost:3000'],
+  })
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

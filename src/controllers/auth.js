@@ -1,6 +1,7 @@
 const catchAsync = require('../middleware/catchAsync');
 const User = require('../models/User');
 const hashService = require('../services/hash-service');
+const jwtService = require('../services/jwt-service');
 const otpService = require('../services/otp-service');
 const passwordService = require('../services/password-service');
 const AppError = require('../util/error');
@@ -67,17 +68,26 @@ exports.newUser = catchAsync(async (req, res, next) => {
   const userExists = await User.findOne({ email });
   if (userExists) return next(new AppError('User is taken', 400));
 
-  const user = await User.create({
+  await User.create({
     name,
     email,
     password,
     isVerified: true,
     verified: new Date(),
   });
-
-  await user.save();
+  const user = await User.findOne({ email }).lean();
 
   // tokens
+  const accessToken = jwtService.createJWT(
+    user,
+    process.env.JWT_ACCESS_EXPIRATION,
+    process.env.JWT_ACCESS_TOKEN_SECRET
+  );
+  const oneDay = 1000 * 60 * 60 * 24;
+  res.cookie('access', accessToken, {
+    expires: new Date(Date.now() + oneDay),
+    httpOnly: true,
+  });
 
   res.status(201).json({
     success: true,
@@ -90,7 +100,7 @@ exports.newUser = catchAsync(async (req, res, next) => {
 exports.authenticate = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email }).select('+password');
+  const user = await User.findOne({ email }).select('+password').lean();
 
   if (!user) return next(new AppError('Invalid credentials', 401));
 
@@ -102,11 +112,30 @@ exports.authenticate = catchAsync(async (req, res, next) => {
   if (!matched) return next(new AppError('Invalid credentials', 401));
 
   // tokens
+  const accessToken = jwtService.createJWT(
+    user,
+    process.env.JWT_ACCESS_EXPIRATION,
+    process.env.JWT_ACCESS_TOKEN_SECRET
+  );
+  const oneDay = 1000 * 60 * 60 * 24;
+  res.cookie('access', accessToken, {
+    expires: new Date(Date.now() + oneDay),
+    httpOnly: true,
+  });
 
   res.status(200).json({
     success: true,
     data: {
       user,
+    },
+  });
+});
+
+exports.getCurrentUser = catchAsync(async (req, res, next) => {
+  res.status(200).json({
+    success: true,
+    data: {
+      user: req.user,
     },
   });
 });

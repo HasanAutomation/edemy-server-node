@@ -31,7 +31,7 @@ exports.getCurrentUser = catchAsync(async (req, res, next) => {
 });
 
 exports.getUserCourses = catchAsync(async (req, res, next) => {
-  const user = await User.findOne({ uid: req.user.uid }).populate('courses');
+  const user = await User.findById(req.user._id).populate('courses');
 
   for (let i = 0; i < user.courses.length; i++) {
     let instructor = await User.findById(user.courses[i].instructor);
