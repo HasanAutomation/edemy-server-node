@@ -16,6 +16,7 @@ const {
 const { authorize } = require('../middleware/authorize');
 const { firebaseAuthCheck } = require('../middleware/firebaseAuth');
 const { isAuthenticated } = require('../middleware/isAuthenticated');
+const { isEnrolled } = require('../middleware/isEnrolled');
 const validateRequest = require('../middleware/requestHandler');
 const router = express.Router();
 
@@ -61,5 +62,8 @@ router.put(
 
 router.get('/check-enrollment/:slug', isAuthenticated, checkEnrollmentServer);
 router.put('/free-enrollment/:courseId', isAuthenticated, freeEnrollment);
+router
+  .route('/user/course/:slug')
+  .get(isAuthenticated, isEnrolled, getSingleCourse);
 
 module.exports = router;
